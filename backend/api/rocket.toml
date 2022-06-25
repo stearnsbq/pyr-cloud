@@ -1,0 +1,3 @@
+
+[global.databases.pyr_cloud]
+url = "postgres://postgres:awsedrft1@192.168.1.247/pyr-cloud"

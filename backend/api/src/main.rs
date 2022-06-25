@@ -1,19 +1,18 @@
 pub mod routes;
 pub mod model;
+pub mod schema;
 
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate dotenv_codegen;
 
 extern crate dotenv;
-use std::sync::Mutex;
 
-
-use routes::login::{login};
+use routes::login::{login, register};
 use dotenv::dotenv;
 use rocket_sync_db_pools::database;
 
-#[database("pyr-cloud")]
+#[database("pyr_cloud")]
 pub struct DBPool(diesel::PgConnection);
 
 #[launch]
@@ -23,6 +22,6 @@ fn rocket() -> _ {
     rocket::build()
     .attach(DBPool::fairing())
     .mount("/", routes![])
-    .mount("/login", routes![login])
+    .mount("/auth", routes![login, register])
 
 }
