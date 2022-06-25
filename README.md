@@ -1,7 +1,6 @@
 # Pyr Cloud
 
-### A really basic self-hostable serverless framework with support for api gateway and functions
-
+### A self-hostable serverless framework with support for api gateway, file storage, and nosql database system powered by mongodb
 
 
 
