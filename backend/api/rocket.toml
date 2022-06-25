@@ -1,0 +1,2 @@
+[global.databases]
+pyr-cloud = { url = "db.sqlite" }
