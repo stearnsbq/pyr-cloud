@@ -1,8 +1,11 @@
 
 use std::any;
 
-use crate::DBPool;
+use rocket::serde::json::Json;
+use serde::Deserialize;
 
+use crate::{DBPool};
+use crate::model::NewResource::NewResource;
 
 #[get("/resources")]
 pub async fn get_resources(connection: DBPool){
@@ -12,16 +15,10 @@ pub async fn get_resources(connection: DBPool){
 }
 
 #[post("/resource", format="json", data="<resource>")]
-pub async fn new_resource(connection: DBPool, resource: any){
+pub async fn new_resource(connection: DBPool, resource: Json<NewResource>){
 
 }
 
 
 
 
-#[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
-pub struct Resource {
-    username: String,
-    password: String,
-}
