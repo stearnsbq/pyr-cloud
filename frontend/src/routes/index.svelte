@@ -1,17 +1,16 @@
 <script lang="ts">
-    import "carbon-components-svelte/css/g80.css";
     import LoginForm from '../components/login.svelte'
-
+    import {Tile} from 'carbon-components-svelte'
 </script>
 
 <div class="login-content">
 
-    <div class="login-box">
-        <h2>Pyr-Cloud Console</h2>
-        <LoginForm></LoginForm>
-    </div>
-
-
+    <Tile>
+        <div class="login-box">
+            <h2>Pyr-Cloud Console</h2>
+            <LoginForm></LoginForm>
+        </div>
+    </Tile>
 
 </div>
 

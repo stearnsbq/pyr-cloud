@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { TextInput, Button } from "carbon-components-svelte";
+  import { TextInput, Button, PasswordInput  } from "carbon-components-svelte";
   import { createForm } from "svelte-forms-lib";
+  import {login} from '../services/auth.svelte'
+  import { goto } from '$app/navigation';
 
 const { form, handleChange, handleSubmit } = createForm({
   initialValues: {
@@ -8,7 +10,15 @@ const { form, handleChange, handleSubmit } = createForm({
     password: ""
   },
   onSubmit: values => {
-    alert(JSON.stringify(values));
+    
+
+    login(values.username, values.password).then((result) => {
+      
+      goto("/console/dashboard")
+
+    })
+
+
   }
 });
 
@@ -17,8 +27,8 @@ const { form, handleChange, handleSubmit } = createForm({
 
 
 <form on:submit={handleSubmit}>
-    <TextInput labelText="Username" placeholder="Enter your username" bind:value={$form.username}></TextInput>
-    <TextInput labelText="Password" placeholder="Enter your password" bind:value={$form.password} type="password"></TextInput>
+    <TextInput required labelText="Username" placeholder="Enter your username" bind:value={$form.username}></TextInput>
+    <PasswordInput  required labelText="Password" placeholder="Enter your password" bind:value={$form.password} type="password"></PasswordInput>
 
     <Button type="submit">Login</Button>
 
