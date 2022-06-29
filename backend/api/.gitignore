@@ -1,4 +1,1 @@
-/target
-.env
-Rocket.toml
-rocket.toml
+node_modules
