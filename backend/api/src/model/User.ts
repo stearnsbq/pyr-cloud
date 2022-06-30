@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import { Entity, OneToMany, PrimaryKey, Property } from "@mikro-orm/core";
 
 @Entity()
 export class User{
@@ -14,5 +14,5 @@ export class User{
 
     @Property()
     lastLogin: Date;
-
+    
 }

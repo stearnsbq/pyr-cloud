@@ -12,7 +12,7 @@ export class Resource{
     route: string
 
     @Enum(() => HTTPMethods)
-    method: string
+    method: HTTPMethods
 
     @ManyToOne()
     parent: Resource
