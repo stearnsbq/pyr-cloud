@@ -2,6 +2,7 @@ import { Body, Controller, Post, Res } from "@pyrjs/core";
 import { Function, Runtime } from "../model/Function";
 import { DatabaseService } from "../services/database.service";
 import {Response} from 'express';
+import Path from 'path';
 
 
 @Controller("/function")
@@ -25,6 +26,29 @@ export class FunctionController{
             newFunction.runtime = body.runtime;
 
             // setup the code environment
+
+            const environmentsPath = Path.resolve(__dirname, "environments")
+
+            switch(body.runtime){
+                case Runtime.NODEJS:{
+
+                    const path = Path.join(environmentsPath, 'nodejs', 'base-function')
+
+                    break;
+                }
+                case Runtime.PYTHON:{
+
+                    const path = Path.join(environmentsPath, 'pytrhon', 'base-function')
+
+                    break;
+                }
+                default:{
+                    return response.status(400)
+                }
+                
+            }
+
+
 
             functionRepo.persistAndFlush(body);
 
