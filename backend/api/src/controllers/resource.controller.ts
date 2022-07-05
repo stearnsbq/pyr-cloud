@@ -9,12 +9,12 @@ import {
   Res,
 } from "@pyrjs/core";
 import { DatabaseService } from "../services/database.service";
-import jwt from "express-jwt";
+import {expressjwt} from "express-jwt";
 import { Resource, HTTPMethods } from "../model/Resource";
 import { Response } from "express";
 
 @Controller("/resource", [
-  jwt.expressjwt({ secret: process.env.JWT_KEY, algorithms: ["HS256"] }),
+  expressjwt({ secret: process.env.JWT_KEY, algorithms: ["HS256"] }),
 ])
 export class ResourceController {
   constructor(private db: DatabaseService) {}

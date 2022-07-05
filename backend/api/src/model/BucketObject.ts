@@ -1,17 +1,21 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
+import { Entity, ManyToOne, PrimaryKey, PrimaryKeyType, Property } from "@mikro-orm/core";
 import { Bucket } from "./Bucket";
-import { BucketFolder } from "./BucketFolder";
 
 @Entity()
 export class BucketObject{
 
-    @PrimaryKey({autoincrement: true})
-    id: number;
+    @PrimaryKey()
+    key: string;
 
     @Property()
-    name: string;
+    filesize: number;
 
-    @ManyToOne()
-    folder: BucketFolder
+    @Property()
+    uploaded: Date;
+
+    @ManyToOne(() => Bucket, {primary: true})
+    bucket: Bucket;
+
+    [PrimaryKeyType]?: [number, string];
 
 }

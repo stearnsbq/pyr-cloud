@@ -3,9 +3,11 @@ import { Function, Runtime } from "../model/Function";
 import { DatabaseService } from "../services/database.service";
 import {Response} from 'express';
 import Path from 'path';
+import {expressjwt} from "express-jwt";
 
-
-@Controller("/function")
+@Controller("/function", [
+    expressjwt({ secret: process.env.JWT_KEY, algorithms: ["HS256"] }),
+  ])
 export class FunctionController{
 
     constructor(private db : DatabaseService){

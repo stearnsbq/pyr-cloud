@@ -8,8 +8,9 @@ export class DatabaseService{
     private _orm: MikroORM<PostgreSqlDriver>;
 
     constructor(){
-        MikroORM.init<PostgreSqlDriver>().then((orm) => {
+        MikroORM.init<PostgreSqlDriver>().then(async (orm) => {
             this._orm = orm
+           // await orm.getMigrator().up()
         })
 
         process.on('SIGINT', async () => {

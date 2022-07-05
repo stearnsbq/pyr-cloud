@@ -12,6 +12,8 @@
   "author": "quinn50",
   "license": "MIT",
   "dependencies": {
+    "@mikro-orm/cli": "^5.2.2",
+    "@mikro-orm/migrations": "^5.2.2",
     "@pyrjs/core": "^1.0.8",
     "@types/argon2": "^0.15.0",
     "@types/cors": "^2.8.12",
