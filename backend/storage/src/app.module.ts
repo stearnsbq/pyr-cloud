@@ -1,9 +1,10 @@
 import { Module } from "@pyrjs/core";
+import { BucketController } from "./controllers/bucket.controller";
 
 
 @Module({
     imports: [],
-    controllers: [],
+    controllers: [BucketController],
     providers: [],
     exports: []
 })
