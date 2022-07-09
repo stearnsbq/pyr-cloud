@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, Res, Next } from "@pyrjs/core";
+import { Body, Controller, Delete, Get, Param, Post, Req, Res, Next, Query } from "@pyrjs/core";
 import {expressjwt} from "express-jwt";
 import { DatabaseService } from "../services/database.service";
 import {Response, Request} from 'express'
@@ -7,17 +7,17 @@ import { BucketObject } from "../model/BucketObject";
 import multer from 'multer'
 import Path from 'path';
 import fs from 'fs';
+import { EntityManager } from "@mikro-orm/core";
 
 
 const _storage = multer.diskStorage({
     destination: async (req: any, file, callback) => {
 
-
         const bucket = req.params.bucket;
 
         // bucket check 
 
-        const em = req.db.em;
+        const em = req.db.em as EntityManager;
 
         const bucketRepo = em.getRepository(Bucket);
 
@@ -25,13 +25,33 @@ const _storage = multer.diskStorage({
             return callback(new BucketNotFoundError("bucket does not exist!"), null)
         }
 
+
+        const bucketObjectRepo = em.getRepository(BucketObject)
+
+        // we need to make sure the "folder" hierarchy exists
+
         
         const path = req.params['0'];
+        const paths = path.split("/") as string[];
+        const bucketRef = em.getReference(Bucket, bucket as any)
+        for(let i = 0; i < paths.length; i++){
 
-        const paths = path.split("/");
+            const fullPath = paths.slice(0, i + 1).join("/")
+       
+           
+            const ghostObject = await bucketObjectRepo.findOne({bucket: bucketRef, filesize: 0, key: fullPath})
 
-        const actualFile = paths.pop();
-        
+            if(!ghostObject){
+                const newGhostObject = new BucketObject()
+                newGhostObject.filesize = 0;
+                newGhostObject.bucket = bucketRef
+                newGhostObject.key = fullPath
+                bucketObjectRepo.persistAndFlush(newGhostObject)
+            }
+
+
+        }
+
         const storagePath = Path.join("./", process.env.BUCKET_STORAGE_ROOT_DIR, bucket, ...paths)
 
         fs.mkdirSync(storagePath, {recursive: true})
@@ -41,13 +61,7 @@ const _storage = multer.diskStorage({
     },
     filename: (req, file, callback) => {
 
-        const path = req.params['0'];
-
-        const paths = path.split("/");
-
-        const actualFile = paths.pop();
-        
-        callback(null, actualFile)
+        callback(null, `${req.params.filename}.${req.params.ext}`)
     }
 })
 
@@ -108,8 +122,8 @@ export class BucketController{
         }
     }
 
-    @Get("/:bucket/*")
-    public async getFromBucket(@Param("path") path: string, @Param("bucket") bucket: string, @Res() res: Response, @Req() request: Request & {db: DatabaseService}){
+    @Get("/:bucket/*/:filename.:ext")
+    public async getFromBucket(@Param("path") path: string, @Param("bucket") bucket: string, @Query("download") download: string, @Res() res: Response, @Req() request: Request & {db: DatabaseService}){
 
         try{
             const em = request.db.em;
@@ -124,6 +138,14 @@ export class BucketController{
                 return res.status(404).json({success: false, err: `object with key ${bucket} does not exist`})
             }
 
+            if(download === 'true'){
+
+                const path = Path.join("./", process.env.BUCKET_STORAGE_ROOT_DIR, bucket, dbBucketObject.key);
+
+                return res.status(200).sendFile(path)
+            }
+
+
             return res.status(200).json({success: true, data: dbBucketObject})
         }catch(err){
             return res.status(500).json({success: false, err: 'failed to get object!'})
@@ -132,16 +154,26 @@ export class BucketController{
     }
 
     @Delete("/:bucket/*")
-    public async deleteFromBucket(@Param("path") path: string, @Param("bucket") bucket: string, @Res() res: Response, @Req() request: Request & {db: DatabaseService}){
+    public async deleteFromBucket(@Param("0") path: string, @Param("bucket") bucket: string, @Res() res: Response, @Req() request: Request & {db: DatabaseService}){
 
         try{
-            const em = request.db.em;
+           const em = request.db.em;
 
-            const bucketObjectRepo = em.getRepository(BucketObject);
+           const bucketRepo = em.getRepository(Bucket);
 
-            const bucketRef = em.getReference(Bucket, bucket as any)
+           if(await bucketRepo.count({key: bucket}) <= 0){
+                return res.status(404).json({success: false, err: 'bucket does not exist!'})
+           }
 
-            await bucketObjectRepo.removeAndFlush({key: path, bucket: bucketRef})
+           const bucketObjectRepo = em.getRepository(BucketObject);
+
+           const bucketRef = em.getReference(Bucket, bucket as any)
+
+           await bucketObjectRepo.removeAndFlush({key: path, bucket: bucketRef})
+
+           const objectPath = Path.join("./", process.env.BUCKET_STORAGE_ROOT_DIR, bucket, path);
+
+           fs.unlinkSync(objectPath);
 
             return res.status(200).json({success: true})
         }catch(err){
@@ -150,7 +182,7 @@ export class BucketController{
 
     }
 
-    @Post("/:bucket/*")
+    @Post("/:bucket/*/:filename.:ext")
     public async uploadToBucket(@Param('bucket') bucket: string, @Next() next: any, @Res() response: Response, @Req() request: Request & {db: DatabaseService}){
 
                 _upload(request, response, async (err: any) => {
@@ -188,8 +220,49 @@ export class BucketController{
                 });
     }
 
+    @Post("/:bucket/*")
+    public async createNewFolder(@Param('bucket') bucket: string, @Param('0') path: string, @Next() next: any, @Res() response: Response, @Req() request: Request & {db: DatabaseService}){
+        
 
+        try{    
+
+            const em = request.db.em;
+
+            const paths = path.split("/") as string[];
+            const bucketRef = em.getReference(Bucket, bucket as any)
+
+            const bucketRepo = em.getRepository(Bucket);
+
+            if(await bucketRepo.count({key: bucket}) <= 0){
+                return response.status(404).json({success: false, error: 'bucket does not exist!'})
+            }
+
+            const bucketObjectRepo = em.getRepository(BucketObject)
+
+            for(let i = 0; i < paths.length; i++){
     
+                const fullPath = paths.slice(0, i + 1).join("/")
+           
+                const ghostObject = await bucketObjectRepo.findOne({bucket: bucketRef, filesize: 0, key: fullPath})
+    
+                if(!ghostObject){
+                    const newGhostObject = new BucketObject()
+                    newGhostObject.filesize = 0;
+                    newGhostObject.bucket = bucketRef
+                    newGhostObject.key = fullPath
+                    bucketObjectRepo.persistAndFlush(newGhostObject)
+                }
+    
+    
+            }
+
+
+            return response.status(200).json({success: true})
+        }catch(err){
+            return response.status(500).json({success: false, error: 'failed to create folder(s)'})
+        }
+
+    }
 
 }
 
