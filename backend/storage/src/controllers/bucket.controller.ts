@@ -15,6 +15,7 @@ const _storage = multer.diskStorage({
 
         const bucket = req.params.bucket;
 
+        console.log("BUCKET", bucket)
         // bucket check 
 
         const em = req.db.em as EntityManager;
@@ -29,16 +30,14 @@ const _storage = multer.diskStorage({
         const bucketObjectRepo = em.getRepository(BucketObject)
 
         // we need to make sure the "folder" hierarchy exists
-
         
-        const path = req.params['0'];
+        const path = req.params['0'] ?? '/';
         const paths = path.split("/") as string[];
         const bucketRef = em.getReference(Bucket, bucket as any)
         for(let i = 0; i < paths.length; i++){
 
             const fullPath = paths.slice(0, i + 1).join("/")
        
-           
             const ghostObject = await bucketObjectRepo.findOne({bucket: bucketRef, filesize: 0, key: fullPath})
 
             if(!ghostObject){
@@ -46,6 +45,7 @@ const _storage = multer.diskStorage({
                 newGhostObject.filesize = 0;
                 newGhostObject.bucket = bucketRef
                 newGhostObject.key = fullPath
+                newGhostObject.uploaded = new Date()
                 bucketObjectRepo.persistAndFlush(newGhostObject)
             }
 
@@ -219,6 +219,44 @@ export class BucketController{
 
                 });
     }
+
+    @Post("/:bucket/:filename.:ext")
+    public async uploadToBucketRoot(@Param('bucket') bucket: string, @Next() next: any, @Res() response: Response, @Req() request: Request & {db: DatabaseService}){
+
+                _upload(request, response, async (err: any) => {
+
+                    try{
+
+                        if (err instanceof BucketNotFoundError) {
+                            next(err)
+                            return response.status(404).json({success: false, err: 'bucket does not exist!'})
+                        }else if (err){
+                            throw err
+                        }
+
+                        const em = request.db.em;
+            
+                        const bucketObjectRepo = em.getRepository(BucketObject);
+
+                        const bucketRef = em.getReference(Bucket, bucket as any)
+                        const newObject = new BucketObject()
+
+                        newObject.bucket = bucketRef;
+                        newObject.uploaded = new Date();
+                        newObject.filesize = request.file.size;
+                        newObject.key = request.file.path
+
+                        bucketObjectRepo.persistAndFlush(newObject)
+
+
+                        next()
+                    }catch(err){
+                        next(err)
+                        response.status(500).json({success: false, err: 'failed to upload object!'})
+                    }
+
+                });
+    }
     
 
     @Post("/:bucket/*")
@@ -251,6 +289,7 @@ export class BucketController{
                     newGhostObject.filesize = 0;
                     newGhostObject.bucket = bucketRef
                     newGhostObject.key = fullPath
+                    newGhostObject.uploaded = new Date()
                     bucketObjectRepo.persistAndFlush(newGhostObject)
                 }
     
