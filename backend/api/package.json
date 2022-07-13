@@ -23,13 +23,16 @@
     "@types/jsonwebtoken": "^8.5.8",
     "@types/morgan": "^1.9.3",
     "argon2": "^0.28.5",
+    "axios": "^0.27.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express-jwt": "^7.7.5",
+    "form-data": "^4.0.0",
     "helmet": "^5.1.0",
     "jsonwebtoken": "^8.5.1",
     "mikro-orm": "^5.2.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "nanoid": "^2.1.11"
   },
   "mikro-orm": {
     "useTsNode": true,
@@ -37,5 +40,8 @@
       "./src/mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
+  },
+  "devDependencies": {
+    "@types/nanoid": "^3.0.0"
   }
 }

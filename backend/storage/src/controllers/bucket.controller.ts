@@ -219,6 +219,7 @@ export class BucketController{
 
                 });
     }
+    
 
     @Post("/:bucket/*")
     public async createNewFolder(@Param('bucket') bucket: string, @Param('0') path: string, @Next() next: any, @Res() response: Response, @Req() request: Request & {db: DatabaseService}){
