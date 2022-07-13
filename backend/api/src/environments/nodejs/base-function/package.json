@@ -2,6 +2,9 @@
     "name": "base-function",
     "version": "1.0.0",
     "description": "basic function",
-    "main": "index.js"
+    "main": "index.js",
+    "dependencies": {
+      "get-stdin": "^9.0.0"
+    }
   }
   

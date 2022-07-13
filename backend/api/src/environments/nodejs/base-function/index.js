@@ -1,11 +1,17 @@
 "use strict"
 
-function handler(event, context){
-    return context.status(200);
+
+const getStdin = require('get-stdin');
+
+const handler = async (event) => {
+
+
+
+
 }
 
 
-
-
-
-module.exports = handler;
+getStdin().then((str) => {
+    const result = handler(str);
+    console.log(JSON.stringify(result))
+})
