@@ -2,22 +2,22 @@ import express from 'express';
 import {json} from 'body-parser'
 import {Environment} from './model/Environment.enum'
 import child_process from 'child_process'
+import dotenv from 'dotenv';
+import Path from 'path'
 
 const app = express()
 
 app.use(json())
 
-
-
+dotenv.config()
 
 app.post("/", async (req, res) => {
 
     // handle the func
 
     const eventBody = req.body;
-
-    const functionSourceCodePath = process.env.FUNCTION_SOURCE_CODE_PATH;
     const environment = process.env.CODE_ENVIRONMENT;
+    let functionSourceCodePath;
 
     let command;
 
@@ -27,38 +27,42 @@ app.post("/", async (req, res) => {
     switch(environment){
         case Environment.NODEJS:{
             command = "node";
+            functionSourceCodePath = Path.join(__dirname, "base", "base.js")
             break;
         }
         case Environment.PYTHON:{
             command = "python";
+            functionSourceCodePath = Path.join(__dirname, "base", "base.py")
             break;
         }
     }
 
-
     args.push(functionSourceCodePath)
-
-    console.log("Running function");
 
     const child = child_process.spawn(command, args)
 
-    setTimeout(() => {
+    const timeoutTimer = setTimeout(() => {
         child.kill(9)
         console.log("function timed out")
         res.status(502).json({success: false, err: 'function timed out'})
-    }, 3000)
+    }, parseInt(process.env.TIMEOUT))
 
     const funcOutput: string[] = [];
 
     child.stdout.on("data", (data) => {
-        data = data.toString()
-        funcOutput.push(data);
+        funcOutput.push(data.toString());
     })
 
 
-    child.on("close", (code, signal) => {
+    child.on("close", async (code, signal) => {
         if(signal === 'SIGKILL' || signal === 'SIGTERM'){
             return
+        }
+
+        for(let i = 0; i < funcOutput.length - 1; i++){
+            if(funcOutput[i]){
+                console.log(funcOutput[i].trim())
+            }
         }
 
         try{
@@ -70,10 +74,13 @@ app.post("/", async (req, res) => {
                 resBase.setHeader(header, value as string)
             }
 
-            
             resBase.json(body ?? {})
+        
         }catch(err){
+            console.log(err)
             res.status(502).json({success: false, err: 'unknown error'})
+        } finally{
+            clearTimeout(timeoutTimer)
         }
        
     })
