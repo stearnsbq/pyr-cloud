@@ -1,0 +1,18 @@
+FROM alpine
+
+RUN apk add --update nodejs npm
+RUN apk add --update python3
+RUN python3 -m ensurepip
+RUN pip3 install --no-cache --upgrade pip setuptools
+RUN npm install -g typescript
+RUN mkdir ./handler
+
+RUN curl ${LATEST_CODE_STORAGE_URL} ./handler
+
+COPY . .
+
+RUN tsc 
+
+RUN npm i
+
+CMD ["node", "dist/index.js"]
