@@ -9,7 +9,17 @@ const app = express()
 
 app.use(json())
 
-dotenv.config()
+
+const dev = true;
+
+if(dev){
+    dotenv.config();
+}
+
+
+
+
+
 
 app.post("/", async (req, res) => {
 
@@ -92,6 +102,8 @@ app.post("/", async (req, res) => {
 
 })
 
+
+// get the handler code
 
 
 

@@ -7,7 +7,7 @@ RUN pip3 install --no-cache --upgrade pip setuptools
 RUN npm install -g typescript
 RUN mkdir ./handler
 
-RUN curl ${LATEST_CODE_STORAGE_URL} ./handler
+# RUN curl ${LATEST_CODE_STORAGE_URL} ./handler
 
 COPY . .
 
